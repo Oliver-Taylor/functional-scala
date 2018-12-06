@@ -14,11 +14,14 @@ trait Configuration {
 
 object Configuration {
 
+  import scala.collection.JavaConverters._
+
   def apply(underlying: Config): Configuration = new Configuration {
 
     override def get[A: ConfReader](path: String): A = ConfReader[A].read(underlying, path)
 
-    override def getOrElse[A: ConfReader](path: String)(default: => A): A = ???
+    override def getOrElse[A: ConfReader](path: String)(default: => A): A =
+      Try(ConfReader[A].read(underlying, path)).getOrElse(default)
 
   }
 
@@ -30,13 +33,16 @@ object Configuration {
 
   implicit val intReader: ConfReader[Int] = ConfReader.instance(_.getInt)
 
-  implicit def optionReader[A](implicit readable: ConfReader[A]): ConfReader[Option[A]] = ???
+  implicit def optionReader[A](implicit readable: ConfReader[A]): ConfReader[Option[A]] = ConfReader.instance(conf => path => {
+    if (conf.getIsNull(path)) None else Some(readable.read(conf, path))
+  })
 
-  implicit def tryReader[A](implicit readable: ConfReader[A]): ConfReader[Try[A]] = ???
+  implicit def tryReader[A](implicit readable: ConfReader[A]): ConfReader[Try[A]] =
+    ConfReader.instance(conf => path => Try(readable.read(conf, path)))
 
-  implicit val stringsReader: ConfReader[Seq[String]] = ???
+  implicit val stringsReader: ConfReader[Seq[String]] = ConfReader.instance(_.getStringList).map(_.asScala)
 
-  implicit val intsReader: ConfReader[Seq[Int]] = ???
+  implicit val intsReader: ConfReader[Seq[Int]] = ConfReader.instance(_.getIntList).map(_.asScala.map(_.toInt))
 
 }
 
