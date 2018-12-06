@@ -22,11 +22,12 @@ object Json {
 
     implicit val doubleWriter: JsonWriter[Double] = JsonWriter(JsNumber)
 
-    implicit def optionWriter[A: JsonWriter]: JsonWriter[Option[A]] = ???
+    implicit def optionWriter[A: JsonWriter]: JsonWriter[Option[A]] = JsonWriter(_.map(Json[A].write).getOrElse(JsNull))
 
-    implicit def seqWriter[A: JsonWriter]: JsonWriter[Seq[A]] = ???
+    implicit def seqWriter[A: JsonWriter]: JsonWriter[Seq[A]] = JsonWriter(seq => JsArray(seq.map(Json[A].write)))
 
-    implicit def mapWriter[A: JsonWriter]: JsonWriter[Map[String, A]] = ???
+    implicit def mapWriter[A: JsonWriter]: JsonWriter[Map[String, A]] =
+      JsonWriter(map => JsObject(map.mapValues(Json[A].write)))
 
   }
 
