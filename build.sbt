@@ -29,3 +29,7 @@ lazy val dependencyInjection = (project in file("dependency-injection"))
 
 lazy val effects = (project in file("effects"))
   .settings(libraryDependencies ++= commonDependencies)
+  .settings(libraryDependencies ++= Seq(
+    "org.typelevel" %% "cats-core" % "2.0.0-M1",
+    "org.typelevel" %% "cats-effect" % "2.0.0-M1"
+  ))
