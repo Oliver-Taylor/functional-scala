@@ -17,17 +17,21 @@ trait Console[F[_]] {
   def write(toWrite: String): F[Unit]
 }
 
-object Async2Console extends Console[Future] {
-  override def read: Future[String] = ???
+case class AsyncConsole(implicit ec: ExecutionContext) extends Console[Future] {
+  override def read: Future[String] = Future {
+    scala.io.StdIn.readLine()
+  }
 
-  override def write(toWrite: String): Future[Unit] = ???
+  override def write(toWrite: String): Future[Unit] = Future {
+    println(toWrite)
+  }
 }
 
-object Sync2Console extends Console[Id] {
+object SyncConsole extends Console[Id] {
 
-  override def read: Id[String] = ???
+  override def read: Id[String] = scala.io.StdIn.readLine()
 
-  override def write(toWrite: String): Id[Unit] = ???
+  override def write(toWrite: String): Id[Unit] = println(toWrite)
 }
 
 /**

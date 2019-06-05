@@ -1,25 +1,34 @@
 package effects.flawed
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 
 trait SyncConsole {
 
   def read: String = scala.io.StdIn.readLine()
 
-  def write(toWrite: String): Unit = ???
+  def write(toWrite: String): Unit = println(toWrite)
 }
 
 object SyncConsole extends SyncConsole
 
 trait AsyncConsole {
 
-  def read: Future[String] = ???
+  def read: Future[String]
 
-  def write(toWrite: String): Future[Unit] = ???
+  def write(toWrite: String): Future[Unit]
 
 }
 
-object AsyncConsole extends AsyncConsole
+case class AsyncConsoleImpl(implicit ec: ExecutionContext) extends AsyncConsole {
+  override def read: Future[String] = Future {
+    scala.io.StdIn.readLine()
+  }
+
+  override def write(toWrite: String): Future[Unit] = Future {
+    println(toWrite)
+  }
+}
 
 object EchoServer {
 
@@ -40,10 +49,8 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     import ExecutionContext.Implicits.global
-    val syncConsole = SyncConsole
-    val asyncConsole = AsyncConsole
 
-    EchoServer.asyncEcho(asyncConsole)
-    EchoServer.syncEcho(syncConsole)
+    Await.result(EchoServer.asyncEcho(AsyncConsoleImpl()), 10 seconds)
+    EchoServer.syncEcho(SyncConsole)
   }
 }
